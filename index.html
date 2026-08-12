@@ -30,7 +30,22 @@
   .eyebrow{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--green)}
   .dim{color:var(--fg-2)}
 
-  nav{position:sticky;top:0;z-index:40;background:rgba(10,16,13,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  /* small announcement strip — scrolls away, nav stays */
+  .newsbar{background:var(--panel);border-bottom:1px solid var(--line);font-size:.8rem;color:var(--fg-2)}
+  .newsbar .wrap{display:flex;align-items:center;justify-content:center;gap:10px;padding:9px 24px;text-align:center}
+  .newsbar .dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex:none;box-shadow:0 0 0 3px rgba(45,184,127,.18)}
+  .newsbar a{color:var(--green);font-weight:650;white-space:nowrap}
+  .newsbar a:hover{text-decoration:underline;text-underline-offset:3px}
+  @media(max-width:620px){.newsbar .wrap{font-size:.74rem;gap:7px}}
+
+  /* the layer content dissolves into as it scrolls under the header */
+  .page-blur-overlay{
+    position:fixed;top:0;left:0;right:0;height:96px;z-index:35;pointer-events:none;
+    backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+    -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 62%,transparent 100%);
+    mask-image:linear-gradient(180deg,#000 0%,#000 62%,transparent 100%)}
+
+  nav{position:sticky;top:0;z-index:40;background:rgba(10,16,13,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
   nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px;gap:20px}
   .brand{display:flex;align-items:center;gap:10px;font-family:"Iowan Old Style",Charter,Georgia,serif;font-size:1.3rem;font-weight:600;letter-spacing:-.02em}
   .brand i{color:var(--green);font-style:normal}
@@ -246,6 +261,14 @@
 </style>
 </head>
 <body>
+
+<div class="newsbar"><div class="wrap">
+  <span class="dot"></span>
+  <span>Santhica is live on Google&nbsp;Play and the App&nbsp;Store</span>
+  <a href="#demo">Book a demo →</a>
+</div></div>
+
+<div class="page-blur-overlay" aria-hidden="true"></div>
 
 <nav><div class="wrap">
   <a class="brand" href="#"><img src="assets/img/santhica-mark.png" alt="Santhica">santhica<i>.</i></a>
