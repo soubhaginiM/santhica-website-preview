@@ -1,0 +1,10 @@
+.DS_Store
+*.log
+
+# never commit: real app recordings / screenshots (may contain patient data)
+media/
+*.mp4
+*.mov
+
+# single-file export, regenerated on demand
+share-preview.html

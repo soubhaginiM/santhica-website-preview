@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Santhica — The clinic OS that reads your handwriting</title>
+<meta name="description" content="Santhica turns handwritten prescriptions, in-patient treatment charts and dictated consultations into a structured medical record — offline-first, ABDM-architected, on the phone the doctor already carries.">
+<link rel="icon" href="assets/img/favicon.png" type="image/png">
+<style>
+  :root{
+    --bg:#0A100D; --bg-2:#0E1613; --panel:#141F1A; --panel-2:#1A2721;
+    --line:#22322B;
+    --fg:#F1F5F1; --fg-2:#A5B4AB; --fg-3:#6F7F76;
+    --green:#2DB87F; --green-dp:#1C8159;
+    --shadow:0 2px 6px rgba(0,0,0,.35), 0 30px 70px -30px rgba(0,0,0,.9);
+    /* the app's own palette — Material 3 dark, as shipped */
+    --app-bg:#0B0E11; --app-surf:#171B20; --app-line:#2A313A;
+    --app-fg:#E8EDF3; --app-fg2:#9AA4B0; --app-fg3:#6B7683;
+    --app-blue:#3D6FE0; --app-blue2:#5C8CEE; --app-blue-soft:#A8C7FA; --app-teal:#2E7D6B;
+    --app-amber:#E0A94A; --app-rose:#E4796C;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+  h1,h2,h3{font-family:"Iowan Old Style","Charter",Georgia,"Times New Roman",serif;font-weight:600;margin:0;text-wrap:balance;letter-spacing:-.018em}
+  p{margin:0;max-width:62ch}
+  a{color:inherit;text-decoration:none}
+  .eyebrow{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--green)}
+  .dim{color:var(--fg-2)}
+
+  nav{position:sticky;top:0;z-index:40;background:rgba(10,16,13,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px;gap:20px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:"Iowan Old Style",Charter,Georgia,serif;font-size:1.3rem;font-weight:600;letter-spacing:-.02em}
+  .brand i{color:var(--green);font-style:normal}
+  .brand img{width:34px;height:34px;object-fit:contain;background:#EAF7FB;border-radius:9px;padding:2px;flex:none}
+  /* footer lockup */
+  .flogo{background:#EAF7FB;border-radius:14px;padding:14px 18px;display:inline-block;margin-bottom:18px}
+  .flogo img{width:132px;display:block}
+
+  /* demo form */
+  .demo-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:start;text-align:left}
+  @media(max-width:900px){.demo-grid{grid-template-columns:1fr;gap:40px}}
+  .bens{list-style:none;margin:26px 0 0;padding:0;display:flex;flex-direction:column;gap:18px}
+  .bens li{display:flex;gap:14px;align-items:flex-start;color:var(--fg-2);font-size:.98rem}
+  .bens .ck{flex:none;width:24px;height:24px;border-radius:50%;background:var(--green);color:#06120C;display:grid;place-items:center;font-size:12px;font-weight:900;margin-top:2px}
+  form.demo{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:16px}
+  form.demo label{display:block;font-size:.85rem;font-weight:650;margin-bottom:7px;color:var(--fg)}
+  form.demo label span{color:var(--fg-3);font-weight:400}
+  form.demo label b{color:var(--green)}
+  form.demo input,form.demo textarea{
+    width:100%;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;
+    padding:11px 13px;font:inherit;font-size:.92rem;color:var(--fg);outline:none;transition:border-color .16s,box-shadow .16s}
+  form.demo input::placeholder,form.demo textarea::placeholder{color:var(--fg-3)}
+  form.demo input:focus,form.demo textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(45,184,127,.16)}
+  form.demo textarea{resize:vertical;min-height:84px}
+  form.demo button{
+    background:var(--green);color:#06120C;border:0;border-radius:10px;padding:13px;
+    font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;transition:background .16s,transform .16s}
+  form.demo button:hover{background:#38cd90;transform:translateY(-1px)}
+  .sent{display:none;background:rgba(45,184,127,.12);border:1px solid var(--green-dp);border-radius:10px;padding:12px 14px;font-size:.9rem;color:var(--fg-2)}
+  .sent.show{display:block}
+  .navlinks{display:flex;gap:28px;font-size:.9rem;color:var(--fg-2);align-items:center}
+  .navlinks a:hover{color:var(--fg)}
+  @media(max-width:900px){.navlinks{display:none}}
+  /* Product dropdown */
+  .dd{position:relative}
+  .dd>button{background:none;border:0;font:inherit;color:var(--fg-2);cursor:pointer;display:flex;align-items:center;gap:6px;padding:0}
+  .dd>button:hover,.dd:focus-within>button{color:var(--fg)}
+  .dd>button .car{font-size:.62rem;transition:transform .18s}
+  .dd:hover>button .car,.dd:focus-within>button .car{transform:rotate(180deg)}
+  .ddmenu{
+    position:absolute;top:calc(100% + 14px);left:50%;transform:translateX(-50%) translateY(-6px);
+    min-width:280px;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:8px;box-shadow:var(--shadow);opacity:0;visibility:hidden;transition:opacity .18s,transform .18s;
+    display:flex;flex-direction:column;gap:2px}
+  .dd:hover .ddmenu,.dd:focus-within .ddmenu{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+  .ddmenu::before{content:"";position:absolute;top:-14px;left:0;right:0;height:14px}
+  .ddmenu a{display:flex;gap:11px;align-items:flex-start;padding:10px 12px;border-radius:9px;transition:background .15s}
+  .ddmenu a:hover{background:var(--bg-2)}
+  .ddmenu .ic{font-size:1rem;line-height:1.2;flex:none}
+  .ddmenu .t{font-size:.88rem;font-weight:650;color:var(--fg);display:block}
+  .ddmenu .s{font-size:.78rem;color:var(--fg-3);display:block;margin-top:1px}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:40px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px}
+  .stat .n{font-family:"Iowan Old Style",Charter,Georgia,serif;font-size:2.5rem;font-weight:650;color:var(--green);line-height:1;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:.88rem;color:var(--fg-2);margin-top:10px}
+  .bigline{font-size:clamp(1.6rem,3.4vw,2.4rem);line-height:1.22;font-family:"Iowan Old Style",Charter,Georgia,serif;font-weight:600;letter-spacing:-.018em}
+  .bigline span{color:var(--fg-3)}
+  .btn{display:inline-block;background:var(--green);color:#06120C;font-size:.88rem;font-weight:700;padding:11px 20px;border-radius:8px;border:1px solid var(--green);transition:transform .16s,background .16s}
+  .btn:hover{background:#38cd90;transform:translateY(-1px)}
+  .btn.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+  .btn.ghost:hover{background:var(--panel);border-color:var(--green)}
+
+  header{position:relative;padding:92px 0 84px;border-bottom:1px solid var(--line);overflow:hidden;background:var(--bg)}
+  /* layer 0: the live network canvas */
+  #net{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block}
+  /* layer 1: a light scrim so the headline stays readable, and the edges fade out */
+  header::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:
+    radial-gradient(760px 420px at 76% 4%, rgba(45,184,127,.10), transparent 68%),
+    linear-gradient(180deg, rgba(10,16,13,.20) 0%, rgba(10,16,13,.34) 60%, rgba(10,16,13,.86) 100%)}
+  /* layer 2: the content */
+  .hero{position:relative;z-index:2;display:grid;grid-template-columns:1.04fr .96fr;gap:60px;align-items:center}
+  @media(max-width:940px){.hero{grid-template-columns:1fr;gap:52px}}
+  h1{font-size:clamp(2.4rem,5vw,3.7rem);line-height:1.05}
+  h1 em{font-style:normal;color:var(--green)}
+  .lede{font-size:1.12rem;color:var(--fg-2);margin-top:22px}
+  .cta{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
+  .chip{font-size:.76rem;color:var(--fg-2);border:1px solid var(--line);background:var(--panel);border-radius:100px;padding:6px 13px}
+
+  /* ── phone · matches the real Android app (Material 3, dark) ── */
+  .phone{width:298px;max-width:100%;border-radius:34px;background:linear-gradient(160deg,var(--panel-2),var(--panel));border:1px solid var(--line);padding:9px;box-shadow:var(--shadow);margin:0 auto}
+  .screen{background:var(--app-bg);color:var(--app-fg);border-radius:26px;overflow:hidden;font-size:12px;line-height:1.45;min-height:520px;display:flex;flex-direction:column;position:relative}
+  .sbar{display:flex;justify-content:space-between;padding:9px 15px 4px;font-size:9.5px;color:var(--app-fg2);font-weight:700}
+  .appbar{display:flex;align-items:center;gap:10px;padding:6px 14px 12px}
+  .appbar .bk{color:var(--app-fg2);font-size:15px}
+  .appbar .t{font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+  .appbar .sp{margin-left:auto;color:var(--app-fg2);letter-spacing:2px}
+  /* blue gradient patient header, as in the app */
+  .phdr{background:linear-gradient(135deg,var(--app-blue),var(--app-blue2));padding:13px 15px 15px;color:#fff}
+  .phdr .row{display:flex;align-items:center;gap:10px}
+  .phdr .av{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+  .phdr .nm{font-size:14.5px;font-weight:700;line-height:1.2}
+  .phdr .mt{font-size:10px;color:rgba(255,255,255,.78);margin-top:1px}
+  .sbody{padding:12px 14px 8px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .shdr{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--app-fg3);margin-top:2px}
+  .item{background:var(--app-surf);border:1px solid var(--app-line);border-radius:11px;padding:10px 12px}
+  .item .n{font-weight:700;font-size:11.5px;color:var(--app-fg)}
+  .item .d{font-size:10.5px;color:var(--app-fg2);margin-top:1px}
+  .med{display:flex;gap:9px;align-items:flex-start}
+  .med .rx{width:19px;height:19px;border-radius:5px;background:rgba(61,111,224,.18);color:var(--app-blue-soft);display:grid;place-items:center;font-size:10px;flex:none;margin-top:1px}
+  .pill{display:inline-block;font-size:8.6px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;padding:3px 8px;border-radius:100px}
+  .pill.ok{background:rgba(46,125,107,.22);color:#5FCFAE}
+  .pill.warn{background:rgba(224,169,74,.18);color:var(--app-amber)}
+  .pill.crit{background:rgba(228,121,108,.18);color:var(--app-rose)}
+  .alert{border:1px solid rgba(228,121,108,.42);background:rgba(228,121,108,.1);border-radius:11px;padding:10px 12px}
+  .alert .n{color:var(--app-rose);font-weight:800;font-size:11px}
+  .alert .d{font-size:10.5px;color:var(--app-fg2);margin-top:2px}
+  .banner{display:flex;gap:9px;align-items:center;background:rgba(46,125,107,.16);border:1px solid rgba(46,125,107,.45);border-radius:11px;padding:9px 11px}
+  .banner .ck{width:17px;height:17px;border-radius:50%;background:#2E7D6B;color:#fff;display:grid;place-items:center;font-size:9px;flex:none}
+  .banner .n{font-weight:700;font-size:11px}
+  .banner .d{font-size:10px;color:var(--app-fg2)}
+  .hand{font-family:"Snell Roundhand","Segoe Script","Bradley Hand",cursive;color:#BFD4F5;font-size:14.5px;line-height:1.9}
+  .empty{background:var(--app-surf);border:1px solid var(--app-line);border-radius:11px;padding:13px;display:flex;gap:10px;align-items:center}
+  .empty .ic{width:26px;height:26px;border-radius:8px;background:rgba(46,125,107,.2);display:grid;place-items:center;font-size:12px;flex:none}
+  /* action buttons like the app's Manual / Capture pair */
+  .acts{display:flex;gap:8px;padding:6px 14px 10px}
+  .acts .a{flex:1;border-radius:100px;padding:9px 0;text-align:center;font-size:11px;font-weight:700}
+  .acts .manual{background:var(--app-teal);color:#EAFBF5}
+  .acts .capture{background:var(--app-blue-soft);color:#0C2246}
+  /* bottom tab bar */
+  .tabs{display:flex;border-top:1px solid var(--app-line);background:#0D1115;padding:7px 0 9px;margin-top:auto}
+  .tabs .tb{flex:1;text-align:center;font-size:8.6px;color:var(--app-fg3);letter-spacing:.02em}
+  .tabs .tb i{display:block;font-size:13px;font-style:normal;margin-bottom:2px}
+  .tabs .tb.on{color:var(--app-blue-soft)}
+  .tl{display:flex;gap:10px}
+  .tl .rail{width:2px;background:var(--app-line);border-radius:2px;position:relative;flex:none;margin-left:4px}
+  .tl .dot{position:absolute;left:-4px;top:3px;width:10px;height:10px;border-radius:50%;background:#5FCFAE;border:2px solid var(--app-bg)}
+  .tl .dot.old{background:var(--app-fg3)}
+
+  /* ── the animation engine ── */
+  .seq .st{opacity:0;animation:pop var(--cycle,9s) cubic-bezier(.2,.7,.3,1) infinite;animation-delay:var(--d,0s)}
+  @keyframes pop{
+    0%{opacity:0;transform:translateY(9px) scale(.985)}
+    7%{opacity:1;transform:none}
+    88%{opacity:1;transform:none}
+    100%{opacity:0;transform:translateY(-5px)}
+  }
+  /* camera scan */
+  .cam{position:relative;background:#0E1613;border:1px solid #22322B;border-radius:10px;height:120px;overflow:hidden;display:grid;place-items:center}
+  .cam .lbl{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#77B79A}
+  .cam .corner{position:absolute;width:16px;height:16px;border:2px solid var(--green);opacity:.85}
+  .cam .c1{top:10px;left:10px;border-right:0;border-bottom:0}
+  .cam .c2{top:10px;right:10px;border-left:0;border-bottom:0}
+  .cam .c3{bottom:10px;left:10px;border-right:0;border-top:0}
+  .cam .c4{bottom:10px;right:10px;border-left:0;border-top:0}
+  .cam .scan{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent);animation:scan var(--cycle,9s) ease-in-out infinite}
+  @keyframes scan{0%{top:6%;opacity:0}8%{opacity:1}38%{top:92%;opacity:1}46%{opacity:0}100%{opacity:0}}
+  /* waveform */
+  .wavef{display:flex;align-items:center;gap:3px;height:120px;justify-content:center;background:#0E1613;border:1px solid #22322B;border-radius:10px}
+  .wavef span{width:3px;background:var(--green);border-radius:2px;opacity:.85;animation:w 1.15s ease-in-out infinite}
+  @keyframes w{0%,100%{height:11px}50%{height:46px}}
+  /* typing */
+  .type{overflow:hidden;white-space:nowrap;animation:type var(--cycle,9s) steps(46,end) infinite}
+  @keyframes type{0%{max-width:0}5%{max-width:0}30%{max-width:100%}100%{max-width:100%}}
+
+  section{padding:92px 0;border-bottom:1px solid var(--line)}
+  section.alt{background:var(--bg-2)}
+  .sec-head{max-width:62ch;margin-bottom:48px}
+  .sec-head h2{font-size:clamp(1.7rem,3.2vw,2.35rem);line-height:1.15;margin-top:13px}
+  .sec-head p{margin-top:15px;color:var(--fg-2)}
+  .feat{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+  @media(max-width:900px){.feat{grid-template-columns:1fr;gap:40px}.feat .mock{order:-1}}
+  .feat .k{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--green);margin-bottom:12px}
+  .feat h3{font-size:clamp(1.4rem,2.5vw,1.95rem);line-height:1.18}
+  .feat p{margin-top:15px;color:var(--fg-2)}
+  ul.ticks{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+  ul.ticks li{display:flex;gap:11px;font-size:.93rem;color:var(--fg-2)}
+  ul.ticks b{color:var(--green);flex:none}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;transition:border-color .2s,transform .2s}
+  .card:hover{border-color:var(--green-dp);transform:translateY(-2px)}
+  .card .ic{font-size:1.3rem;display:block;margin-bottom:13px}
+  .card h3{font-size:1.04rem;margin-bottom:9px}
+  .card p{font-size:.9rem;color:var(--fg-2)}
+
+  /* leadership */
+  .team{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+  .tm{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center;transition:border-color .2s,transform .2s}
+  .tm:hover{border-color:var(--green-dp);transform:translateY(-2px)}
+  .tm .av{width:72px;height:72px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;
+    background:linear-gradient(135deg,#1E3A5F,var(--green));color:#fff;font-size:1.35rem;font-weight:800;letter-spacing:.02em}
+  .tm h3{font-size:1.06rem}
+  .tm .role{font-size:.83rem;font-weight:700;color:var(--green);margin:4px 0 12px}
+  .tm p{font-size:.88rem;color:var(--fg-2);margin:0 auto}
+  .tm .li{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:.83rem;color:var(--fg-2);border:1px solid var(--line);border-radius:100px;padding:5px 13px;transition:border-color .18s,color .18s}
+  .tm .li:hover{color:var(--fg);border-color:var(--green-dp)}
+  .logos{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 34px;margin-top:44px;padding-top:32px;border-top:1px solid var(--line)}
+  .logos span{font-size:.82rem;letter-spacing:.15em;text-transform:uppercase;font-weight:700;color:var(--fg-3)}
+  .logos .lead{color:var(--fg-2);letter-spacing:.04em;text-transform:none;font-weight:400;width:100%;text-align:center;font-size:.86rem;margin-bottom:2px}
+
+  .close{text-align:center;padding:104px 0;position:relative;overflow:hidden}
+  .close::before{content:"";position:absolute;inset:0;background:radial-gradient(620px 320px at 50% 0%,rgba(45,184,127,.12),transparent 70%);pointer-events:none}
+  .close .wrap{position:relative}
+  .close h2{font-size:clamp(1.95rem,3.8vw,2.8rem)}
+  .close p{margin:17px auto 0}
+  .close .cta{justify-content:center}
+  footer{padding:40px 0 64px;font-size:.85rem;color:var(--fg-3)}
+  footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  footer a:hover{color:var(--fg-2)}
+
+  .rv{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease}
+  .rv.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .rv{opacity:1;transform:none;transition:none}
+    .seq .st{opacity:1;animation:none}
+    .cam .scan,.wavef span,.type{animation:none}
+    .type{max-width:100%}
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="brand" href="#"><img src="assets/img/santhica-mark.png" alt="Santhica">santhica<i>.</i></a>
+  <div class="navlinks">
+    <a href="#about">About</a>
+    <a href="#problem">The problem</a>
+    <div class="dd">
+      <button type="button" aria-haspopup="true">Product <span class="car">▼</span></button>
+      <div class="ddmenu">
+        <a href="#capture"><span class="ic">📄</span><span><span class="t">Prescription capture</span><span class="s">Handwriting to a structured record</span></span></a>
+        <a href="#charts"><span class="ic">🏥</span><span><span class="t">Treatment charts</span><span class="s">Multi-day in-patient ward charts</span></span></a>
+        <a href="#voice"><span class="ic">🎙</span><span><span class="t">Voice consultation</span><span class="s">English, Hindi and Bengali</span></span></a>
+        <a href="#safety"><span class="ic">🛟</span><span><span class="t">Clinical safety net</span><span class="s">Abnormal results, chased automatically</span></span></a>
+        <a href="#record"><span class="ic">🧬</span><span><span class="t">Longitudinal record</span><span class="s">One patient, one record, every clinic</span></span></a>
+      </div>
+    </div>
+    <a href="#team">Team</a>
+  </div>
+  <a class="btn" href="#demo">Book a demo</a>
+</div></nav>
+
+<header>
+<canvas id="net" aria-hidden="true"></canvas>
+<div class="wrap hero">
+  <div class="rv">
+    <div class="eyebrow">India's healthcare data backbone</div>
+    <h1>One patient. One record.<br><em>Every clinic.</em></h1>
+    <p class="lede">Not another health app. Santhica is the record layer India's 1.4&nbsp;billion people have been waiting for — capturing care where it actually happens, on paper in a doctor's hand, and making the record follow the patient across clinics, on their consent. Offline-first, ABDM-native, on the phone the doctor already carries.</p>
+    <div class="cta">
+      <a class="btn" href="#demo">Book a demo</a>
+      <a class="btn ghost" href="#capture">Explore the product</a>
+    </div>
+    <div class="chips">
+      <span class="chip">Longitudinal record</span><span class="chip">Consent-driven sharing</span>
+      <span class="chip">Handwriting extraction</span><span class="chip">Treatment charts</span>
+      <span class="chip">Clinical safety net</span><span class="chip">Offline-first</span>
+      <span class="chip">ABDM-native</span>
+    </div>
+  </div>
+  <div class="rv mock"><div class="phone"><div class="screen">
+    <div class="sbar"><span>9:41</span><span>◗ ▮▮ ▮</span></div>
+    <div class="phdr">
+      <div class="row">
+        <div class="av">P</div>
+        <div><div class="nm">Patient record</div><div class="mt">F · 32y · ABHA linked</div></div>
+      </div>
+    </div>
+    <div class="sbody seq" style="--cycle:10s">
+      <div class="st" style="--d:.15s"><div class="banner"><span class="ck">✓</span>
+        <div><div class="n">Prescription ready</div><div class="d">Tap to review</div></div></div></div>
+      <div class="shdr">Active medications</div>
+      <div class="st" style="--d:.9s"><div class="item med"><span class="rx">℞</span>
+        <div><div class="n">Amoxicillin 500 mg</div><div class="d">1-0-1 · 5 days</div></div></div></div>
+      <div class="st" style="--d:1.5s"><div class="item med"><span class="rx">℞</span>
+        <div><div class="n">Paracetamol 650 mg</div><div class="d">SOS · fever</div></div></div></div>
+      <div class="st" style="--d:2.1s"><div class="item med"><span class="rx">℞</span>
+        <div><div class="n">Pantoprazole 40 mg</div><div class="d">1-0-0 · before food</div></div></div></div>
+      <div class="st" style="--d:3s"><div class="alert"><div class="n">⚠ Allergy — penicillin class</div>
+        <div class="d">Recorded allergy on file. Confirm before saving.</div></div></div>
+    </div>
+    <div class="acts"><div class="a manual">✎ Manual</div><div class="a capture">◉ Capture</div></div>
+    <div class="tabs">
+      <div class="tb"><i>⌂</i>Home</div><div class="tb on"><i>👥</i>Patients</div>
+      <div class="tb"><i>▤</i>Calendar</div><div class="tb"><i>⚙</i>Settings</div>
+    </div>
+  </div></div></div>
+</div></header>
+
+<section id="about"><div class="wrap">
+  <div class="sec-head rv" style="max-width:70ch">
+    <div class="eyebrow">India's healthcare data backbone</div>
+    <h2>Care that connects.</h2>
+    <p style="font-size:1.12rem">Not another health app. The data backbone India's 1.4 billion people have been waiting for.</p>
+    <p style="margin-top:18px">A patient's history shouldn't live in a folder they carry, or in whichever clinic happened to type it up. Santhica captures the record where it's actually created — on paper, in a doctor's handwriting — and makes it follow the person instead of the building.</p>
+  </div>
+</div></section>
+
+<section class="alt" id="problem"><div class="wrap">
+  <div class="rv" style="max-width:64ch">
+    <div class="eyebrow">The problem</div>
+    <div class="bigline" style="margin-top:14px">10 billion prescriptions a year.<br><span>Less than 0.1% are digitised.</span></div>
+  </div>
+  <div class="stats">
+    <div class="stat rv"><div class="n">3.9M</div><div class="l">care points across India</div></div>
+    <div class="stat rv"><div class="n">70%</div><div class="l">travel 100 km+ for care, carrying kilos of paper</div></div>
+    <div class="stat rv"><div class="n">&lt;0.1%</div><div class="l">of 10 billion annual prescriptions are digitised</div></div>
+  </div>
+  <div class="rv" style="margin-top:52px;padding-top:44px;border-top:1px solid var(--line);max-width:64ch">
+    <div class="eyebrow">What we do</div>
+    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);line-height:1.16;margin-top:13px">The backbone everything else plugs into.</h2>
+    <p style="margin-top:15px">Three things have to be true at once, and each is hard on its own.</p>
+  </div>
+  <div class="grid" style="margin-top:32px">
+    <div class="card rv"><span class="ic">✍️</span><h3>AI that reads what doctors write</h3>
+      <p>Handwritten prescriptions and dense ward charts — the documents Indian medicine actually runs on, not the typed reports that were already digital.</p></div>
+    <div class="card rv"><span class="ic">🕸</span><h3>The data network is the moat</h3>
+      <p>Every clinic that joins makes the record more complete for the patient, and the network more valuable to the next clinic.</p></div>
+    <div class="card rv"><span class="ic">👤</span><h3>One patient. One record. Every touchpoint.</h3>
+      <p>The history belongs to the person, travels with them on their consent, and every access is logged.</p></div>
+  </div>
+</div></section>
+
+<section id="capture"><div class="wrap feat">
+  <div class="rv">
+    <div class="k">Prescription capture</div>
+    <h3>One photo. A structured prescription.</h3>
+    <p>Point the camera at the prescription you just wrote. Santhica reads the drug, strength, frequency, duration and follow-up, then hands it back for a five-second review — never a blind save.</p>
+    <ul class="ticks">
+      <li><b>✓</b> Handwritten, not only printed</li>
+      <li><b>✓</b> Allergy and drug-safety checks at review time</li>
+      <li><b>✓</b> Shareable prescription PDF for the patient</li>
+      <li><b>✓</b> Nothing about the consultation changes</li>
+    </ul>
+  </div>
+  <div class="rv mock"><div class="phone"><div class="screen">
+    <div class="sbar"><span>9:41</span><span>◗ ▮▮ ▮</span></div>
+    <div class="appbar"><span class="bk">←</span><span class="t">Capture prescription</span><span class="sp">⋮</span></div>
+    <div class="sbody seq" style="--cycle:9s">
+      <div class="cam">
+        <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
+        <span class="scan" style="--cycle:9s"></span>
+        <span class="hand" style="font-size:12.5px;text-align:center">℞ T. Amoxicillin 500<br>1-0-1 × 5 days<br>Rev. after 1 wk</span>
+      </div>
+      <div class="st" style="--d:3.4s"><span class="pill warn">Reading handwriting…</span></div>
+      <div class="st" style="--d:4.4s"><div class="item med"><span class="rx">℞</span>
+        <div><div class="n">Amoxicillin 500 mg</div><div class="d">1-0-1 · 5 days · oral</div></div></div></div>
+      <div class="st" style="--d:5.1s"><div class="item med"><span class="rx">℞</span>
+        <div><div class="n">Paracetamol 650 mg</div><div class="d">SOS · fever</div></div></div></div>
+      <div class="st" style="--d:5.9s"><span class="pill ok">Follow-up · 1 week</span></div>
+    </div>
+    <div class="acts"><div class="a capture" style="flex:1">Save to patient record</div></div>
+  </div></div></div>
+</div></section>
+
+<section class="alt" id="charts"><div class="wrap feat">
+  <div class="rv mock"><div class="phone"><div class="screen">
+    <div class="sbar"><span>9:41</span><span>◗ ▮▮ ▮</span></div>
+    <div class="appbar"><span class="bk">←</span><span class="t">Treatment chart</span><span class="sp">⋮</span></div>
+    <div class="sbody seq" style="--cycle:10s">
+      <div class="shdr">Day 3 of 7 · 6 medications</div>
+      <div class="st" style="--d:.2s"><div class="item med"><span class="rx">℞</span>
+        <div><div class="n">Inj. Ceftriaxone 1 g</div><div class="d">BD · IV · days 1–7</div></div></div></div>
+      <div class="st" style="--d:.9s"><div class="item med"><span class="rx">℞</span>
+        <div><div class="n">Inj. Pantoprazole 40 mg</div><div class="d">OD · IV · days 1–5</div></div></div></div>
+      <div class="st" style="--d:1.6s"><div class="item med"><span class="rx">℞</span>
+        <div><div class="n">T. Metformin 500 mg</div><div class="d">BD · oral · continuing</div></div></div></div>
+      <div class="st" style="--d:2.3s"><div class="item med"><span class="rx">℞</span>
+        <div><div class="n">T. Atorvastatin 20 mg</div><div class="d">OD · night</div></div></div></div>
+      <div class="st" style="--d:3.2s"><div class="item" style="border-color:rgba(224,169,74,.5);background:rgba(224,169,74,.09)">
+        <div class="n" style="color:var(--app-amber)">⚠ Needs review</div>
+        <div class="d">Row 5 dose unclear — confirm strength</div></div></div>
+    </div>
+    <div class="acts"><div class="a capture" style="flex:1">Confirm chart</div></div>
+  </div></div></div>
+  <div class="rv">
+    <div class="k">In-patient treatment charts</div>
+    <h3>The hardest page in the ward.</h3>
+    <p>Multi-day, multi-author charts — a week of dosing rounds and nursing entries on one dense sheet. Most clinical AI won't attempt it. Santhica reads it into a structured medication schedule.</p>
+    <ul class="ticks">
+      <li><b>✓</b> Multi-day dosing grids</li>
+      <li><b>✓</b> Low-confidence rows flagged for review, never guessed</li>
+      <li><b>✓</b> Designed around in-patient wards, not out-patient forms</li>
+    </ul>
+  </div>
+</div></section>
+
+<section id="voice"><div class="wrap feat">
+  <div class="rv">
+    <div class="k">Voice consultation</div>
+    <h3>When speaking is faster than writing.</h3>
+    <p>Dictate the consultation and get the same structured record — medications, diagnosis, follow-up. Speak English, Hindi or Bengali; the language is detected automatically.</p>
+    <ul class="ticks">
+      <li><b>✓</b> English, Hindi and Bengali</li>
+      <li><b>✓</b> Same structured output as a written prescription</li>
+      <li><b>✓</b> Always reviewed before anything is saved</li>
+    </ul>
+  </div>
+  <div class="rv mock"><div class="phone"><div class="screen">
+    <div class="sbar"><span>9:41</span><span>◗ ▮▮ ▮</span></div>
+    <div class="appbar"><span class="bk">←</span><span class="t">Voice consult</span><span class="sp">⋮</span></div>
+    <div class="sbody seq" style="--cycle:9s">
+      <div class="wavef">
+        <span style="animation-delay:0s"></span><span style="animation-delay:.09s"></span><span style="animation-delay:.18s"></span>
+        <span style="animation-delay:.27s"></span><span style="animation-delay:.36s"></span><span style="animation-delay:.45s"></span>
+        <span style="animation-delay:.54s"></span><span style="animation-delay:.63s"></span><span style="animation-delay:.72s"></span>
+        <span style="animation-delay:.81s"></span><span style="animation-delay:.9s"></span><span style="animation-delay:.99s"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--app-fg2)">
+        <span>● Recording</span><span>01:12</span></div>
+      <div class="item"><div class="d type" style="font-style:italic;--cycle:9s">“…paracetamol 650 SOS for fever, review after one week…”</div></div>
+      <div class="st" style="--d:4.2s"><div class="item med"><span class="rx">℞</span>
+        <div><div class="n">Paracetamol 650 mg</div><div class="d">SOS · fever</div></div></div></div>
+      <div class="st" style="--d:5.1s"><span class="pill ok">Follow-up · 1 week</span></div>
+    </div>
+    <div class="acts"><div class="a manual">Discard</div><div class="a capture">Save</div></div>
+  </div></div></div>
+</div></section>
+
+<section class="alt" id="safety"><div class="wrap feat">
+  <div class="rv mock"><div class="phone"><div class="screen">
+    <div class="sbar"><span>9:41</span><span>◗ ▮▮ ▮</span></div>
+    <div class="appbar"><span class="t">Safety net</span><span class="sp">⋮</span></div>
+    <div class="sbody seq" style="--cycle:10s">
+      <div class="shdr">2 open · 1 resolved</div>
+      <div class="st" style="--d:.3s"><div class="alert"><div class="n">⚠ Critical · Potassium 6.4</div>
+        <div class="d">Flagged 2 days ago · not yet acknowledged</div>
+        <div style="margin-top:7px"><span class="pill crit">Escalated</span></div></div></div>
+      <div class="st" style="--d:1.4s"><div class="item"><div class="n">Awaiting result</div>
+        <div class="d">Thyroid panel ordered 9 days ago</div>
+        <div style="margin-top:7px"><span class="pill warn">Overdue</span></div></div></div>
+      <div class="st" style="--d:2.5s"><div class="item"><div class="n">Resolved</div>
+        <div class="d">Hb 8.1 · reviewed, treatment adjusted</div>
+        <div style="margin-top:7px"><span class="pill ok">Closed</span></div></div></div>
+    </div>
+    <div class="tabs">
+      <div class="tb on"><i>⌂</i>Home</div><div class="tb"><i>👥</i>Patients</div>
+      <div class="tb"><i>▤</i>Calendar</div><div class="tb"><i>⚙</i>Settings</div>
+    </div>
+  </div></div></div>
+  <div class="rv">
+    <div class="k">Clinical safety net</div>
+    <h3>The result nobody chased is the one that hurts.</h3>
+    <p>Santhica watches for abnormal results and for tests that were ordered but never came back — opens a case, ranks it by severity, and escalates until someone acts. Follow-up stops depending on memory.</p>
+    <ul class="ticks">
+      <li><b>✓</b> Abnormal results detected and ranked</li>
+      <li><b>✓</b> Ordered-but-pending tests tracked automatically</li>
+      <li><b>✓</b> Escalation ladder with a full audit trail</li>
+      <li><b>✓</b> Allergy and interaction checks before saving</li>
+    </ul>
+  </div>
+</div></section>
+
+<section id="record"><div class="wrap feat">
+  <div class="rv">
+    <div class="k">Longitudinal record</div>
+    <h3>One patient. One record. Every visit.</h3>
+    <p>Every prescription, chart and consultation joins a single timeline that belongs to the patient — not to the clinic that happened to create it. Visit another Santhica clinic and the history travels with them, on their consent.</p>
+    <ul class="ticks">
+      <li><b>✓</b> Active medications and conditions at a glance</li>
+      <li><b>✓</b> Cross-clinic access on patient-granted, revocable consent</li>
+      <li><b>✓</b> Every access logged</li>
+      <li><b>✓</b> Multi-doctor clinics with roles and invitations</li>
+    </ul>
+  </div>
+  <div class="rv mock"><div class="phone"><div class="screen">
+    <div class="sbar"><span>9:41</span><span>◗ ▮▮ ▮</span></div>
+    <div class="phdr"><div class="row">
+      <div class="av">P</div>
+      <div><div class="nm">Patient record</div><div class="mt">F · 32y · 6 visits · ABHA linked</div></div>
+    </div></div>
+    <div class="sbody seq" style="--cycle:10s">
+      <div class="shdr">Visit history</div>
+      <div class="st" style="--d:.2s"><div class="tl"><div class="rail"><span class="dot"></span></div>
+        <div><div style="font-weight:700;font-size:11.5px">Today · Prescription</div>
+        <div style="font-size:10.5px;color:var(--app-fg2)">Amoxicillin, Paracetamol</div></div></div></div>
+      <div class="st" style="--d:1.1s"><div class="tl"><div class="rail"><span class="dot old"></span></div>
+        <div><div style="font-weight:700;font-size:11.5px">12 Jun · Ward admission</div>
+        <div style="font-size:10.5px;color:var(--app-fg2)">7-day treatment chart</div></div></div></div>
+      <div class="st" style="--d:2s"><div class="tl"><div class="rail"><span class="dot old"></span></div>
+        <div><div style="font-weight:700;font-size:11.5px">3 Mar · Consultation</div>
+        <div style="font-size:10.5px;color:var(--app-fg2)">Another clinic · shared on consent</div></div></div></div>
+      <div class="st" style="--d:3s"><div class="item"><div class="n">Active medications · 3</div>
+        <div class="d">Conditions · 2 · Allergies · 1</div></div></div>
+    </div>
+    <div class="acts"><div class="a manual">✎ Manual</div><div class="a capture">◉ Capture</div></div>
+    <div class="tabs">
+      <div class="tb"><i>⌂</i>Home</div><div class="tb on"><i>👥</i>Patients</div>
+      <div class="tb"><i>▤</i>Calendar</div><div class="tb"><i>⚙</i>Settings</div>
+    </div>
+  </div></div></div>
+</div></section>
+
+<section class="alt" id="clinics"><div class="wrap">
+  <div class="sec-head rv">
+    <div class="eyebrow">Built for real clinics</div>
+    <h2>Designed for the conditions Indian practice actually runs in.</h2>
+    <p>Patchy networks, shared devices, paper workflows — and a regulator that expects the record to belong to the patient.</p>
+  </div>
+  <div class="grid">
+    <div class="card rv"><span class="ic">📶</span><h3>Works offline</h3><p>Register patients, capture prescriptions and record visits with no connection at all. Everything syncs when the network returns.</p></div>
+    <div class="card rv"><span class="ic">🔒</span><h3>Encrypted on device</h3><p>The local database is encrypted and biometric-locked. Patient data is wiped on sign-out and when switching clinics.</p></div>
+    <div class="card rv"><span class="ic">🪪</span><h3>ABDM-architected</h3><p>Patient identity, consent and care contexts are core tables from the first schema — not a compliance layer bolted on afterwards.</p></div>
+    <div class="card rv"><span class="ic">📱</span><h3>One device</h3><p>The phone the doctor already owns. No desktop, no server in the back room, no IT visit.</p></div>
+    <div class="card rv"><span class="ic">👥</span><h3>Multi-doctor clinics</h3><p>Invite colleagues, assign roles, switch between clinics — with data scoped so nothing leaks across organisations.</p></div>
+    <div class="card rv"><span class="ic">📤</span><h3>Your data, exportable</h3><p>Import an existing patient list, export everything, any time. No lock-in by hostage-taking.</p></div>
+  </div>
+</div></section>
+
+<section id="team"><div class="wrap">
+  <div class="sec-head rv" style="max-width:64ch">
+    <div class="eyebrow">Leadership</div>
+    <h2>Silicon Valley engineering, pointed at India's hardest clinical problem.</h2>
+    <p>A small founding team that has built AI and distributed systems at the scale where they either work or fail publicly.</p>
+  </div>
+  <div class="team">
+    <div class="tm rv">
+      <div class="av">SR</div>
+      <h3>Suranjana Roy</h3>
+      <div class="role">Founder &amp; CEO</div>
+      <p>Former Head of Engineering at Amazon. Led Agentic AI, LLM, Inferencing and MLOps for Alexa and AGI. 15+ years building AI systems at Amazon, Oracle, and now Santhica.</p>
+      <a class="li" href="https://www.linkedin.com/in/sbroy/" target="_blank" rel="noopener noreferrer">in · LinkedIn</a>
+    </div>
+    <div class="tm rv">
+      <div class="av">SM</div>
+      <h3>Soubhagini Mahapatra</h3>
+      <div class="role">CTO &amp; Founding Engineer</div>
+      <p>Ex-HubSpot senior engineer. 14+ years building distributed systems at scale. Builds Santhica's core infrastructure: offline-first mobile, cloud sync and consent-driven data flows.</p>
+      <a class="li" href="https://www.linkedin.com/in/soubhagini-mahapatra-978035156/" target="_blank" rel="noopener noreferrer">in · LinkedIn</a>
+    </div>
+    <div class="tm rv">
+      <div class="av">RJ</div>
+      <h3>Romir Jain</h3>
+      <div class="role">COO &amp; Founding Engineer</div>
+      <p>Recent CS graduate and serial entrepreneur. Brings startup velocity and AI product experience to the founding team.</p>
+    </div>
+  </div>
+  <div class="logos rv">
+    <span class="lead">Built by engineers from</span>
+    <span>Amazon</span><span>Alexa</span><span>Audible</span><span>Oracle</span><span>HubSpot</span><span>Broadcom</span>
+  </div>
+</div></section>
+
+<section class="close" id="demo"><div class="wrap">
+  <div class="sec-head rv" style="text-align:center;margin:0 auto 48px">
+    <div class="eyebrow">Get started</div>
+    <h2>Watch AI read a prescription in 30 seconds.</h2>
+  </div>
+  <div class="demo-grid">
+    <div class="rv">
+      <p class="dim" style="font-size:1.05rem">Get a personalised walkthrough of how Santhica works for your clinic, hospital or health system. Bring a prescription you wrote this week — we'll read your own handwriting back to you.</p>
+      <ul class="bens">
+        <li><span class="ck">✓</span><span>Live AI demo — prescription to structured record in 30 seconds</span></li>
+        <li><span class="ck">✓</span><span>Runs on a mobile phone — no laptop or desktop needed</span></li>
+        <li><span class="ck">✓</span><span>A deployment plan tailored to your organisation</span></li>
+      </ul>
+    </div>
+    <form class="demo rv" id="demoForm">
+      <div>
+        <label for="f-name">Full name <b>*</b></label>
+        <input id="f-name" name="name" type="text" required placeholder="Dr. A. Kumar">
+      </div>
+      <div>
+        <label for="f-email">Email <b>*</b></label>
+        <input id="f-email" name="email" type="email" required placeholder="doctor@clinic.org">
+      </div>
+      <div>
+        <label for="f-org">Organisation <span>(optional)</span></label>
+        <input id="f-org" name="organization" type="text" placeholder="Clinic or hospital name">
+      </div>
+      <div>
+        <label for="f-role">Role <b>*</b></label>
+        <input id="f-role" name="role" type="text" required placeholder="Consultant physician">
+      </div>
+      <div>
+        <label for="f-msg">Message <span>(optional)</span></label>
+        <textarea id="f-msg" name="message" placeholder="Tell us about your use case…"></textarea>
+      </div>
+      <button type="submit">Request a demo</button>
+      <div class="sent" id="sentMsg">Thanks — your email client should have opened. We reply within 24 hours. If nothing opened, write to <a href="mailto:support@santhica.com" style="color:var(--green)">support@santhica.com</a>.</div>
+    </form>
+  </div>
+</div></section>
+
+<footer><div class="wrap" style="flex-direction:column;align-items:flex-start;gap:0">
+  <a class="flogo" href="#"><img src="assets/img/santhica-lockup.png" alt="Santhica — care that connects"></a>
+</div><div class="wrap">
+  <div>© Santhica, Inc.</div>
+  <div style="display:flex;gap:22px">
+    <a href="privacy-policy.html">Privacy Policy</a>
+    <a href="terms-of-service.html">Terms of Service</a>
+    <a href="mailto:support@santhica.com">Contact</a>
+  </div>
+</div></footer>
+
+<script>
+  const io = new IntersectionObserver((es)=>{
+    es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.12, rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.rv').forEach((el,i)=>{ el.style.transitionDelay=(i%3)*70+'ms'; io.observe(el); });
+
+  /* ── hero background: a living network ──────────────────────────
+     Nodes drift and link when they come close — "care that connects",
+     rendered rather than illustrated. Canvas, not video: a few KB,
+     resolution-independent, and it stops when scrolled out of view. */
+  (function(){
+    const cv = document.getElementById('net');
+    if(!cv) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ctx = cv.getContext('2d');
+    let w=0,h=0,dpr=1,nodes=[],raf=null,running=false;
+
+    function size(){
+      const r = cv.getBoundingClientRect();
+      dpr = Math.min(devicePixelRatio||1, 2);
+      w = r.width; h = r.height;
+      cv.width = w*dpr; cv.height = h*dpr;
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      const target = Math.round(Math.min(110, Math.max(40, w*h/11000)));
+      nodes = Array.from({length:target}, () => ({
+        x: Math.random()*w, y: Math.random()*h,
+        vx: (Math.random()-.5)*0.30, vy: (Math.random()-.5)*0.30,
+        r: Math.random()*1.8 + 1.3
+      }));
+    }
+
+    function frame(){
+      ctx.clearRect(0,0,w,h);
+      const LINK = Math.min(190, Math.max(120, w/8));
+      for(let i=0;i<nodes.length;i++){
+        const a = nodes[i];
+        if(!reduce){
+          a.x += a.vx; a.y += a.vy;
+          if(a.x < -20) a.x = w+20; else if(a.x > w+20) a.x = -20;
+          if(a.y < -20) a.y = h+20; else if(a.y > h+20) a.y = -20;
+        }
+        for(let j=i+1;j<nodes.length;j++){
+          const b = nodes[j], dx = a.x-b.x, dy = a.y-b.y;
+          const d2 = dx*dx + dy*dy;
+          if(d2 < LINK*LINK){
+            const t = 1 - Math.sqrt(d2)/LINK;
+            ctx.strokeStyle = 'rgba(45,184,127,' + (t*0.55).toFixed(3) + ')';
+            ctx.lineWidth = t*1.4;
+            ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+          }
+        }
+      }
+      for(const n of nodes){
+        ctx.fillStyle = 'rgba(96,222,175,.9)';
+        ctx.shadowColor = 'rgba(45,184,127,.85)'; ctx.shadowBlur = 7;
+        ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,6.283); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      if(running && !reduce) raf = requestAnimationFrame(frame);
+    }
+
+    function start(){ if(running) return; running=true; frame(); }
+    function stop(){ running=false; if(raf) cancelAnimationFrame(raf); raf=null; }
+
+    size(); frame();                       // paint once even if reduced-motion
+    if(!reduce){
+      start();
+      // don't burn CPU once the hero is scrolled past
+      new IntersectionObserver(es=>{ es[0].isIntersecting ? start() : stop(); },{threshold:0})
+        .observe(cv.parentElement);
+    }
+    let t; addEventListener('resize', ()=>{ clearTimeout(t); t=setTimeout(()=>{ size(); if(!running) frame(); },160); });
+  })();
+
+  // Demo request → opens the visitor's mail client, pre-filled.
+  // Same approach as the current site: no backend, nothing stored here.
+  document.getElementById('demoForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const g = id => document.getElementById(id).value.trim();
+    const name=g('f-name'), email=g('f-email'), org=g('f-org'), role=g('f-role'), msg=g('f-msg');
+    if(!name || !email || !role) return;
+    const subject = `Demo request — ${name}${org ? ' · ' + org : ''}`;
+    const body = [
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Organisation: ${org || '—'}`,
+      `Role: ${role}`,
+      '',
+      `Message: ${msg || '—'}`
+    ].join('\n');
+    window.location.href = 'mailto:support@santhica.com?subject='
+      + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    document.getElementById('sentMsg').classList.add('show');
+    this.reset();
+  });
+</script>
+</body>
+</html>
