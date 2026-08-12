@@ -103,17 +103,30 @@
   .ddmenu .t{font-size:.88rem;font-weight:650;color:var(--fg);display:block}
   .ddmenu .s{font-size:.78rem;color:var(--fg-3);display:block;margin-top:1px}
 
-  /* real app screenshots */
-  .shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:34px;margin-top:46px}
-  .shot{display:flex;flex-direction:column;align-items:center;text-align:center}
-  .shot .frame{
-    width:100%;max-width:268px;border-radius:30px;padding:8px;
-    background:linear-gradient(160deg,var(--panel-2),var(--panel));
-    border:1px solid var(--line);box-shadow:var(--shadow)}
-  .shot .frame img{width:100%;display:block;border-radius:23px}
-  .shot h3{font-size:1.02rem;margin-top:24px}
-  .shot p{font-size:.9rem;color:var(--fg-2);margin-top:8px;max-width:34ch}
-  .shotnote{margin-top:34px;font-size:.8rem;color:var(--fg-3);text-align:center}
+  /* layered UI fragments — real interface, no patient identifiers */
+  .caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:46px}
+  .cap{
+    background:var(--panel);border:1px solid var(--line);border-radius:20px;
+    padding:28px 28px 0;overflow:hidden;position:relative;min-height:392px;
+    transition:border-color .22s,transform .22s}
+  .cap:hover{border-color:var(--green-dp);transform:translateY(-3px)}
+  .cap h3{font-size:1.08rem;line-height:1.25}
+  .cap p{font-size:.9rem;color:var(--fg-2);margin-top:10px;max-width:36ch}
+  .cap .collage{position:relative;height:210px;margin-top:26px}
+  .cap .collage img{
+    position:absolute;display:block;border-radius:12px;
+    box-shadow:0 2px 5px rgba(0,0,0,.28), 0 18px 40px -20px rgba(0,0,0,.85);
+    transition:transform .3s cubic-bezier(.2,.7,.3,1)}
+  .cap:hover .collage img{transform:translateY(-4px)}
+  .cap:hover .collage img.b{transform:translateY(-8px)}
+  /* per-card placement */
+  .c1 .a{width:96%;left:2%;top:0}
+  .c1 .b{width:74%;left:20%;top:104px}
+  .c2 .a{width:100%;left:0;top:6px}
+  .c2 .b{width:62%;left:-4%;top:126px}
+  .c3 .a{width:90%;left:5%;top:0}
+  .c3 .b{width:78%;left:-2%;top:120px}
+  .capnote{margin-top:30px;font-size:.8rem;color:var(--fg-3);text-align:center}
 
   /* stats */
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:40px}
@@ -597,24 +610,33 @@
     <h2>Everything a consultation needs, on one screen.</h2>
     <p>Not a pilot mock-up — this is the shipped app, running on iOS and Android today.</p>
   </div>
-  <div class="shots">
-    <div class="shot rv">
-      <div class="frame"><img src="assets/img/app/home.png" alt="Home screen showing charts awaiting review with confidence scores" loading="lazy"></div>
-      <h3>Nothing waits unnoticed</h3>
-      <p>Charts needing review surface on the home screen with a confidence score, so low-certainty extractions get a human eye.</p>
-    </div>
-    <div class="shot rv">
-      <div class="frame"><img src="assets/img/app/prescription-review.png" alt="Prescription review with medicine, dosage and frequency fields" loading="lazy"></div>
+  <div class="caps">
+    <div class="cap c1 rv">
       <h3>Reviewed, never auto-saved</h3>
-      <p>Every extracted medicine, dose, frequency and route is editable before it reaches the record. Quick-add and voice sit alongside.</p>
+      <p>Every extracted medicine, dose, frequency and route stays editable until a doctor confirms it.</p>
+      <div class="collage">
+        <img class="a" src="assets/img/frag/medcard.png" alt="Medication entry with dose, frequency chips and route" loading="lazy">
+        <img class="b" src="assets/img/frag/medtoolbar.png" alt="Medication toolbar with voice and quick-add" loading="lazy">
+      </div>
     </div>
-    <div class="shot rv">
-      <div class="frame"><img src="assets/img/app/patient-detail.png" alt="Patient record showing visit history and summary counts" loading="lazy"></div>
+    <div class="cap c2 rv">
       <h3>The whole history, one pane</h3>
       <p>Visits, conditions and active medications at a glance — readable between patients, not after hours.</p>
+      <div class="collage">
+        <img class="a" src="assets/img/frag/visitcard.png" alt="Visit history entry with status and summary link" loading="lazy">
+        <img class="b" src="assets/img/frag/summary.png" alt="Patient summary counts: visits, conditions, active medications" loading="lazy">
+      </div>
+    </div>
+    <div class="cap c3 rv">
+      <h3>A day's work, one screen</h3>
+      <p>Patient counts, today's visits and the charts still waiting on a human eye — the first thing a doctor sees.</p>
+      <div class="collage">
+        <img class="a" src="assets/img/frag/stattiles.png" alt="Patient and visit counts" loading="lazy">
+        <img class="b" src="assets/img/frag/actions.png" alt="New visit, add patient and search actions" loading="lazy">
+      </div>
     </div>
   </div>
-  <p class="shotnote rv">Screenshots from the live app. Patient identifiers are obscured — no real patient data appears on this page.</p>
+  <p class="capnote rv">Interface from the shipped app. These views carry no patient names, numbers or identifiers.</p>
 </div></section>
 
 <section class="alt" id="clinics"><div class="wrap">
