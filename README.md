@@ -1,75 +1,63 @@
-# santhica.com — website design preview
+# Santhica — website
 
-A design proposal for santhica.com, published for internal review.
+The marketing website for **Santhica**, applied AI for healthcare. Tagline: *Care that connects.*
 
-**This is not the production website.** The live site is unaffected and continues to
-be served from its own repository. Nothing here is deployed to `santhica.com`, and this
-repository deliberately contains no `CNAME` file, so it cannot claim that domain.
+Santhica turns what already happens in a consultation — a spoken conversation, a handwritten prescription, a lab report — into a structured, FHIR-aligned patient record that stays useful across visits. The product is mobile-first and offline-capable, built for clinics, nursing homes and hospitals in India. The site presents three layers: **Voice Scribe** (speech to structured record), **longitudinal patient context** (one continuous history), and **clinical agents** that act on that context.
 
-**Live preview:** see the GitHub Pages URL in the repository description.
+## What the site covers
 
----
+### Product
 
-## Why this exists
+| Page | Covers |
+| --- | --- |
+| `index.html` | The full story end to end: Voice Scribe, longitudinal context, the agents, the clinical safety net, outpatient and inpatient previews, offline-first mobile, and app download links. |
+| `platform.html` | Healthcare AI OS overview — how the layers fit together. |
+| `voice-scribe.html` | Consultations in English, Hindi and Bengali becoming discrete clinical fields for clinician review. |
+| `agents.html` | The three agents — Clinical Intelligence, Documentation, Care Closure — plus the safety-net checks and an illustrative OPD capacity model. |
+| `clinical-workflows.html` | Outpatient and inpatient pathways, treatment charts and hand-offs. |
+| `strategy.html` | Approach to practical healthcare AI. Placeholder; content pending. |
 
-The current site is a single hero, an about section and a contact form. It reads as a
-company that has not shipped a product. Santhica has shipped one — handwriting
-extraction, in-patient treatment charts, voice consultation, a clinical safety net, a
-longitudinal patient record, offline-first sync and ABDM-aligned identity — and almost
-none of that is visible to a visitor.
+### Company
 
-This preview restructures the site around what the product actually does, and shows the
-product rather than describing it.
+`about.html` (purpose and team) · `careers.html` (placeholder) · `contact.html` (demo request; composes an email draft locally, no backend)
 
-## What to review
+### Writing
 
-- **Structure** — section order and the story it tells
-- **Visual direction** — typography, colour, density, the animated app screens
-- **Copy** — headline positioning in particular
+`blogs.html` lists three articles: what longitudinal patient context is, how a paper prescription can start a connected record, and carrying context from outpatient visit into inpatient care.
 
-Copy and imagery are still in progress. Feedback on structure and look is more useful
-right now than line edits.
+### Legal and credits
 
-## Structure
+`privacy-policy.html` · `terms-of-service.html` · `media-credits.html` (stock footage attribution)
 
+## What is and isn't real
+
+This matters, because the site shows clinical-looking data throughout.
+
+- **Every patient, value and prescription is fictional.** John Doe, the potassium and Hb results, the amoxicillin and warfarin examples — all invented sample data. No real patient information appears anywhere.
+- **Product mockups are HTML and CSS**, not screenshots of the running app.
+- **Care Closure and agent-assisted coordination are labelled in development** or as workflow concepts, not shipped features.
+- **The 13,000-hour figure is an explicit model**, not a measured result: 500 visits × 26 days × 12 months × 5 assumed minutes ÷ 60.
+- **ABDM certification is on the roadmap**, not held.
+- **Background clips are licensed stock footage.** The people and facilities shown are not Santhica customers or staff. See [assets/video/LICENSES.md](assets/video/LICENSES.md).
+
+## Status
+
+Published as a **preview** through GitHub Pages. Every page carries `noindex, nofollow, noarchive` and `robots.txt` disallows crawling, so it stays out of search results.
+
+> Both of those have to be removed before this becomes the production site, or the real site will never be indexed.
+
+## Running it
+
+Static HTML, CSS and JavaScript. No build step, no dependencies.
+
+```sh
+python3 -m http.server 4173 --bind 127.0.0.1
 ```
-index.html               landing page
-privacy-policy.html      current legal text, restyled
-terms-of-service.html    current legal text, restyled
-assets/
-  css/legal.css          shared styling for the legal pages
-  img/                   logo mark, logo lockup, favicon
-```
 
-Static HTML and CSS. No build step, no framework, no dependencies, no tracking, and no
-network requests at runtime — the page renders offline.
+Then open <http://127.0.0.1:4173/>. Opening `index.html` directly works too, though browser restrictions may block clipboard copying on `file://` URLs.
 
-## Running it locally
+Stylesheets load in order, each layer overriding the last: `site.css` (foundations) → `landing.css` (homepage, light-theme tokens) → `blog.css` / `legal.css` → `components.css` (product cards, agents, safety net, device mockups).
 
-```bash
-open index.html
-```
+Motion throughout is opt-in behind `prefers-reduced-motion: no-preference`; reduced-motion visitors get the finished static state.
 
-That is the whole workflow. Any change is a file edit and a browser refresh.
-
-## Implementation notes
-
-- **App screens are rendered, not screenshotted.** Each phone screen is CSS keyframe
-  animation, cycling through the real flow — capture, extraction, review. A few
-  kilobytes rather than megabytes of video, sharp at any resolution.
-- **The hero background is a canvas animation** — nodes drift and link as they near each
-  other. It stops rendering when scrolled out of view, caps device pixel ratio at 2, and
-  paints a single static frame under `prefers-reduced-motion`.
-- **No patient data.** No names, phone numbers, or health identifiers appear anywhere.
-  Medications and doses are generic clinical examples. No real app screenshots are used.
-- **Not indexable.** Every page carries a `noindex` meta tag and `robots.txt` disallows
-  all crawlers, so a draft cannot surface in search results.
-
-## If this direction is approved
-
-The design ports into the existing site repository as React components — the same CSS,
-scoped under a namespace to avoid collisions with the Tailwind utilities already in use
-there. Roughly half a day. Hosting cost is unchanged, which is nothing: GitHub Pages on
-a public repository.
-
-This repository is disposable and should be deleted once the review is finished.
+`.nojekyll` is deliberate — it tells GitHub Pages to serve the tree verbatim instead of running Jekyll over it. Keep it.

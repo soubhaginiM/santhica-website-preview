@@ -6,5 +6,13 @@ media/
 *.mp4
 *.mov
 
-# single-file export, regenerated on demand
-share-preview.html
+# Licensed public stock footage; see assets/video/LICENSES.md.
+!assets/video/clinic-consultation.mp4
+!assets/video/hospital-entry.mp4
+!assets/video/clinic-entry.mp4
+!assets/video/hospital-reception.mp4
+!assets/video/paper-photo.mp4
+
+# never commit: private working material dropped into the project.
+private/
+Meets/
